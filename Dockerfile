@@ -14,6 +14,7 @@ WORKDIR /app
 # Note: Les dépendances PNL doivent être installées ici
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+# ... lignes 1 à 14 ...
 
 # Installer le modèle spaCy français
 RUN python -m spacy download fr_core_news_sm
