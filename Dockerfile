@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN python -m spacy download fr_core_news_sm
 
 # Copier le reste du code de l'application
-COPY . .
+COPY pep_registry /app/pep_registry
 
 # Exposer le port de l'API
 EXPOSE 8000
