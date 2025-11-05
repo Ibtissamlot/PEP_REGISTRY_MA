@@ -3,8 +3,7 @@ uvicorn[standard]
 gunicorn
 requests
 pydantic
-# Dépendances critiques manquantes
 sqlalchemy
-psycopg2-binary  # Pour la connexion à PostgreSQL (Supabase)
-scrapy           # Pour le crawling
-spacy            # Pour le PNL
+psycopg2-binary
+scrapy
+spacy
