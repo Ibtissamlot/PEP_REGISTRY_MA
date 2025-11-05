@@ -1,12 +1,15 @@
-# ... lignes 1 à 8 (conservez les dépendances système) ...
+# Utiliser une image Python officielle comme base
 FROM python:3.11-slim
 
-# Installer les dépendances système nécessaires pour la compilation des packages Python (notamment psycopg2)
+# Installer les dépendances système nécessaires pour la compilation des packages Python
+# Inclut les outils pour PostgreSQL (libpq-dev) et les outils de scraping (libxml2-dev, libxslt1-dev)
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     libxml2-dev \
     libxslt1-dev \
+    zlib1g-dev \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Définir le répertoire de travail dans le conteneur
@@ -28,5 +31,5 @@ WORKDIR /app/pep_registry
 # Exposer le port de l'API
 EXPOSE 8000
 
-# Commande de démarrage de l'API
+# Commande de démarrage de l'API (Utilisation de Gunicorn pour la production)
 CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "src.api.main:app", "-b", "0.0.0.0:8000"]
