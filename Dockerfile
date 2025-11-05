@@ -1,6 +1,12 @@
 # Utiliser une image Python officielle comme base
 FROM python:3.11-slim
 
+# Installer les dépendances système nécessaires pour la compilation des packages Python (notamment psycopg2)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Définir le répertoire de travail dans le conteneur
 WORKDIR /app
 
