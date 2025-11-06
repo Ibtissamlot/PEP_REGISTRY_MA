@@ -30,6 +30,13 @@ class DBConnector:
     """
     def __init__(self):
         pass
+        # ... à la fin de pep_registry/src/db_connector.py
+
+# Assurez-vous que tous les modèles sont liés au moteur de base de données
+# Ceci est crucial pour que SQLAlchemy sache où trouver les tables.
+# NOTE: Cette ligne doit être exécutée APRÈS la définition de tous vos modèles (Base.metadata)
+Base.metadata.create_all(bind=engine)
+
 
 # Fonction utilitaire pour obtenir une session de base de données
 def get_db():
