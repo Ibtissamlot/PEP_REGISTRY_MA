@@ -1,36 +1,17 @@
-import psycopg2
-from psycopg2 import extras
-from src.config import DB_CONFIG
+import os
+from sqlalchemy import create_engine
 
-class DBConnector:
-    """Gère la connexion et les opérations de base de données."""
-    
-    def __init__(self):
-        self.conn = None
-        self.cursor = None
+# ... autres imports ...
 
-    def __enter__(self):
-        try:
-            self.conn = psycopg2.connect(**DB_CONFIG)
-            self.cursor = self.conn.cursor(cursor_factory=extras.RealDictCursor)
-            return self
-        except psycopg2.OperationalError as e:
-            print(f"Erreur de connexion à la base de données: {e}")
-            raise
+# Récupère l'URL de connexion depuis la variable d'environnement
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.cursor:
-            self.cursor.close()
-        if self.conn:
-            if exc_type is None:
-                self.conn.commit()
-            else:
-                self.conn.rollback()
-            self.conn.close()
+if not DATABASE_URL:
+    # Lève une erreur si la variable n'est pas définie (sécurité)
+    # Ceci est crucial pour éviter l'erreur "localhost"
+    raise ValueError("DATABASE_URL environment variable is not set. Cannot connect to database.")
 
-    def execute(self, query, params=None, fetch=False):
-        """Exécute une requête SQL."""
-        self.cursor.execute(query, params)
-        if fetch:
-            return self.cursor.fetchall()
-        return None
+# Crée le moteur de connexion en utilisant l'URL de Supabase
+engine = create_engine(DATABASE_URL)
+
+# ... le reste de votre code ...
