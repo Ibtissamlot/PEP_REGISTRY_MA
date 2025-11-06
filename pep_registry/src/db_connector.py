@@ -10,9 +10,11 @@ if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set. Cannot connect to database.")
 
 # 2. Création du moteur de connexion
+# Le paramètre connect_args force l'utilisation de SSL pour la connexion à Supabase
 engine = create_engine(
     DATABASE_URL, 
-    pool_pre_ping=True
+    pool_pre_ping=True,
+    connect_args={"sslmode": "require"}  # <--- AJOUTEZ CETTE LIGNE
 )
 
 # 3. Création de la session de base de données
