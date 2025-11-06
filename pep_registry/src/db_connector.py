@@ -7,11 +7,9 @@ from sqlalchemy.orm import sessionmaker
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if not DATABASE_URL:
-    # Erreur critique si la variable n'est pas définie
     raise ValueError("DATABASE_URL environment variable is not set. Cannot connect to database.")
 
 # 2. Création du moteur de connexion
-# Le paramètre pool_pre_ping=True aide à gérer les connexions inactives
 engine = create_engine(
     DATABASE_URL, 
     pool_pre_ping=True
@@ -20,8 +18,18 @@ engine = create_engine(
 # 3. Création de la session de base de données
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# 4. Base pour les modèles de données (si vous utilisez SQLAlchemy ORM)
+# 4. Base pour les modèles de données
 Base = declarative_base()
+
+# 5. CLASSE MANQUANTE (ajoutée pour satisfaire l'importation dans main.py)
+# Nous allons la rendre simple, car la logique de connexion est déjà dans les fonctions ci-dessus.
+class DBConnector:
+    """
+    Classe factice pour satisfaire l'importation dans main.py.
+    La logique de connexion est gérée par SessionLocal et get_db.
+    """
+    def __init__(self):
+        pass
 
 # Fonction utilitaire pour obtenir une session de base de données
 def get_db():
@@ -31,5 +39,6 @@ def get_db():
     finally:
         db.close()
 
-# Note: Vous devrez peut-être ajuster ce code si votre fichier original contenait
-# d'autres fonctions ou classes spécifiques à votre projet.
+# Note: Si votre main.py utilise Base ou SessionLocal directement, vous n'avez pas besoin de cette classe.
+# Mais pour l'instant, nous la rétablissons pour que l'importation fonctionne.
+
