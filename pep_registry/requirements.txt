@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-gunicorn
-requests
-pydantic
-sqlalchemy
-psycopg2-binary
-scrapy
-spacy
