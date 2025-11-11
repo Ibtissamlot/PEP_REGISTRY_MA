@@ -6,10 +6,9 @@ services:
     env: docker
     repo: https://github.com/Ibtissamlot/PEP_REGISTRY_MA
     branch: main
-    rootDir: . # Indique la racine du dépôt
-    dockerContext: . # Indique que le Dockerfile est à la racine
+    rootDir: .
+    dockerContext: .
     plan: starter # Ou le plan que vous utilisez
-    # La commande de démarrage est dans le Dockerfile (CMD )
 
   # Configuration du Cron Job
   - type: cron
@@ -21,4 +20,5 @@ services:
     dockerContext: .
     plan: starter # Ou le plan que vous utilisez
     schedule: "0 0 * * *" # Exemple : tous les jours à minuit (ajustez si nécessaire )
-    command: "python src/etl/run_etl.py"
+    # LIGNE SUPPRIMÉE : command: "python src/etl/run_etl.py"
+
