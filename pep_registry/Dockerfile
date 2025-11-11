@@ -33,3 +33,7 @@ EXPOSE 8000
 
 # Commande de démarrage de l'API (Utilisation de Gunicorn pour la production)
 CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "src.api.main:app", "-b", "0.0.0.0:8000"]
+
+# Ajoute le répertoire parent de 'src' au chemin de recherche des modules Python
+ENV PYTHONPATH=/app/pep_registry
+
