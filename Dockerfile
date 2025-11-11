@@ -23,13 +23,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN python -m spacy download fr_core_news_sm
 
 # Copier le reste du code de l'application
-COPY . /app/pep_registry
+# CORRECTION : Copie le contenu de la racine du dépôt directement dans /app
+COPY . /app
 
-# Définition du répertoire de travail pour que Python trouve les modules
-WORKDIR /app/pep_registry
+# CORRECTION : Le répertoire de travail est déjà /app, pas besoin de le redéfinir
+# WORKDIR /app
 
 # Exposer le port de l'API
 EXPOSE 8000
 
 # Commande de démarrage de l'API (Utilisation de Gunicorn pour la production)
+# Le chemin de l'application est maintenant src.api.main:app car le WORKDIR est /app
 CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "src.api.main:app", "-b", "0.0.0.0:8000"]
