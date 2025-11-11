@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException, APIRouter
 from typing import List
-from .db_connector import DBConnector
-from .models import Pep
-from .config import DB_CONFIG # Assurez-vous que DB_CONFIG est bien importé
+from src.db_connector import DBConnector
+from src.models import Pep
+from src.config import DB_CONFIG
+
 
 # Initialisation de l'application FastAPI
 app = FastAPI(
