@@ -46,38 +46,99 @@ class PEPRegistryETL:
         """
         raw_sources = []
         
-        # Simuler l'extraction des sources officielles
-        for source in self.config.get('sources', {}).get('official', []):
-            raw_sources.append({
+        # --- LOGIQUE D'EXTRACTION RÉELLE ---
+        # En production, cette méthode appellerait les crawlers Scrapy.
+        # Pour l'instant, nous allons simuler le résultat d'un crawler Scrapy
+        # en utilisant des données plus réalistes basées sur les sources.
+        
+        # NOTE: Pour une implémentation réelle, vous devriez créer un projet Scrapy
+        # et appeler les crawlers ici.
+        
+        # Données de test plus réalistes pour le Maroc
+        real_raw_data = [
+            {
                 "source_type": "official",
-                "url": source["url"],
-                "weight": source["weight"],
-                "content": f"Le Bulletin Officiel confirme la nomination de Monsieur Ahmed Alami au poste de Ministre des Finances.",
-                "publish_date": datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            })
-
-        # Simuler l'extraction des sources médias
-        for source in self.config.get('sources', {}).get('media', []):
-            raw_sources.append({
+                "url": "https://www.oc.gov.ma/actualites/nomination-ministre-finances",
+                "weight": 0.6,
+                "content": "Le Bulletin Officiel confirme la nomination de Monsieur Mohamed Benchaaboun au poste de Ministre des Finances. La nomination a été faite par décret royal.",
+                "publish_date": "2024-10-20"
+            },
+            {
                 "source_type": "media",
-                "url": source["url"],
-                "weight": source["weight"],
-                "content": f"Selon {source['name']}, le nouveau Wali de la région de Rabat est Madame Fatima Zohra. Elle a été nommée par décret royal.",
-                "publish_date": datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            })
-            
-        # Simuler l'extraction des listes de sanctions
-        for source in self.config.get('sources', {}).get('sanctions', []):
-             raw_sources.append({
-                "source_type": "sanction",
-                "url": source["url"],
-                "weight": source["weight"],
-                "content": f"Liste de sanctions simulée de {source['name']}. Le nom de M. Alami n'y figure pas.",
-                "publish_date": datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            })
-            
-        print(f"Extraction simulée de {len(raw_sources)} sources.")
-        return raw_sources
+                "url": "https://fr.hespress.com/politique/le-nouveau-wali-de-rabat-est-mme-fatima-zohra",
+                "weight": 0.2,
+                "content": "Selon Hespress, le nouveau Wali de la région de Rabat-Salé-Kénitra est Madame Fatima Zohra El Alaoui. Elle a été nommée par décret royal en date du 20 octobre 2024.",
+                "publish_date": "2024-10-21"
+            },
+            {
+                "source_type": "media",
+                "url": "https://telquel.ma/actualite/demission-du-dg-de-l-ammc",
+                "weight": 0.2,
+                "content": "TelQuel rapporte la démission de Monsieur Hassan Bouknadel de son poste de Directeur Général de l'AMMC. La démission prend effet immédiatement.",
+                "publish_date": "2024-10-25"
+            },
+            {
+                "source_type": "official",
+                "url": "https://www.courdescomptes.ma/rapport-2024",
+                "weight": 0.5,
+                "content": "La Cour des Comptes a publié son rapport annuel 2024, mentionnant des irrégularités dans la gestion de l'ancien Ministre de l'Équipement, M. Abdelkader Amara.",
+                "publish_date": "2024-11-01"
+            }
+        ]
+        
+        print(f"Extraction simulée de {len(real_raw_data)} sources plus réalistes.")
+        return real_raw_data
+        
+    def _extract_data(self):
+        """
+        Implémentation de l'extraction.
+        Pour la simulation, nous allons simplement retourner une liste de sources.
+        En production, cette méthode appellerait les crawlers Scrapy.
+        """
+        raw_sources = []
+        
+        # --- LOGIQUE D'EXTRACTION RÉELLE (SIMULÉE AVEC DES DONNÉES PLUS RÉALISTES) ---
+        # En production, cette méthode appellerait les crawlers Scrapy.
+        # Pour l'instant, nous allons simuler le résultat d'un crawler Scrapy
+        # en utilisant des données plus réalistes basées sur les sources.
+        
+        # NOTE: Pour une implémentation réelle, vous devriez créer un projet Scrapy
+        # et appeler les crawlers ici.
+        
+        # Données de test plus réalistes pour le Maroc
+        real_raw_data = [
+            {
+                "source_type": "official",
+                "url": "https://www.oc.gov.ma/actualites/nomination-ministre-finances",
+                "weight": 0.6,
+                "content": "Le Bulletin Officiel confirme la nomination de Monsieur Mohamed Benchaaboun au poste de Ministre des Finances. La nomination a été faite par décret royal.",
+                "publish_date": "2024-10-20"
+            },
+            {
+                "source_type": "media",
+                "url": "https://fr.hespress.com/politique/le-nouveau-wali-de-rabat-est-mme-fatima-zohra",
+                "weight": 0.2,
+                "content": "Selon Hespress, le nouveau Wali de la région de Rabat-Salé-Kénitra est Madame Fatima Zohra El Alaoui. Elle a été nommée par décret royal en date du 20 octobre 2024.",
+                "publish_date": "2024-10-21"
+            },
+            {
+                "source_type": "media",
+                "url": "https://telquel.ma/actualite/demission-du-dg-de-l-ammc",
+                "weight": 0.2,
+                "content": "TelQuel rapporte la démission de Monsieur Hassan Bouknadel de son poste de Directeur Général de l'AMMC. La démission prend effet immédiatement.",
+                "publish_date": "2024-10-25"
+            },
+            {
+                "source_type": "official",
+                "url": "https://www.courdescomptes.ma/rapport-2024",
+                "weight": 0.5,
+                "content": "La Cour des Comptes a publié son rapport annuel 2024, mentionnant des irrégularités dans la gestion de l'ancien Ministre de l'Équipement, M. Abdelkader Amara.",
+                "publish_date": "2024-11-01"
+            }
+        ]
+        
+        print(f"Extraction simulée de {len(real_raw_data)} sources plus réalistes.")
+        return real_raw_data
 
 
 
