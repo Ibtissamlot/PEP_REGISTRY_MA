@@ -57,7 +57,7 @@ class PEPRegistryETL:
         # Appel du Scrapy Crawler
         from scrapy.crawler import CrawlerProcess
         from scrapy.utils.project import get_project_settings
-        from .spiders.hespress_spider import HespressSpider
+        from src.etl.spiders.hespress_spider import HespressSpider
         
         # Configuration Scrapy (à adapter si nécessaire)
         settings = get_project_settings()
@@ -108,7 +108,7 @@ class PEPRegistryETL:
         # Appel du Scrapy Crawler
         from scrapy.crawler import CrawlerProcess
         from scrapy.utils.project import get_project_settings
-        from .spiders.hespress_spider import HespressSpider
+        from src.etl.spiders.hespress_spider import HespressSpider
         
         # Configuration Scrapy (à adapter si nécessaire)
         settings = get_project_settings()
