@@ -15,8 +15,8 @@ class HespressSpider(scrapy.Spider):
 
     def parse(self, response):
         # Sélecteur pour les liens d'articles sur la page d'index
-        # J'utilise un sélecteur générique pour les articles sur la page
-        article_links = response.css('div.article-card a::attr(href)').getall()
+        # Utilisation d'un sélecteur plus générique pour les liens d'articles
+        article_links = response.css('a[href*="/a/"]::attr(href)').getall()
         
         for link in article_links:
             # Assurez-vous que le lien est absolu
@@ -30,8 +30,8 @@ class HespressSpider(scrapy.Spider):
     def parse_article(self, response):
         # Extraction du contenu de l'article
         title = response.css('h1.page-title::text').get()
-        # Extraction des paragraphes de contenu
-        content_paragraphs = response.css('div.article-content p::text').getall()
+        # Extraction des paragraphes de contenu (sélecteur plus générique)
+        content_paragraphs = response.css('div.article-content p::text, div.article-content div::text').getall()
         content = " ".join(content_paragraphs).strip()
         
         # Extraction de la date de publication
