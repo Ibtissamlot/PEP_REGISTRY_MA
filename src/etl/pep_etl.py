@@ -80,10 +80,10 @@ class PEPRegistryETL:
                 return item
         
         # Ajouter le pipeline temporaire
-    # Nous devons utiliser le nom du fichier (pep_etl) pour que Scrapy trouve la classe
-    process.settings.set('ITEM_PIPELINES', {
-        'pep_etl.RawDataPipeline': 300,
-    })
+        # Nous devons utiliser le nom du fichier (pep_etl) pour que Scrapy trouve la classe
+        process.settings.set('ITEM_PIPELINES', {
+            'pep_etl.RawDataPipeline': 300,
+        })
         
         # Lancer le crawler
         process.crawl(Le360Spider)
