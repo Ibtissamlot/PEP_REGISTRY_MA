@@ -75,8 +75,9 @@ class PEPRegistryETL:
         
         # Créer un collecteur d'items simple
         class ItemCollector:
-            def __init__(self, items):
-                self.items = items
+            def __init__(self, settings):
+                # Récupérer la liste passée via les settings
+                self.items = settings.get('RAW_DATA_LIST', [])
             def process_item(self, item, spider):
                 self.items.append(dict(item))
                 return item
@@ -89,7 +90,10 @@ class PEPRegistryETL:
         })
         
         # Lancer le crawler
-        process.crawl(Le360Spider, items=raw_data_list)
+        # Le CrawlerProcess ne peut pas passer d'arguments au spider de cette manière.
+        # Nous allons utiliser les settings pour passer la liste.
+        settings.set('RAW_DATA_LIST', raw_data_list)
+        process.crawl(Le360Spider)
         process.start()  # Le processus est bloquant jusqu'à ce que tous les crawlers soient terminés
         
         print(f"Extraction réelle via Scrapy terminée. {len(raw_data_list)} éléments capturés.")
