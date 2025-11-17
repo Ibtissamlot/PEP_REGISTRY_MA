@@ -32,7 +32,8 @@ class PEPRegistryETL:
         self.loader.load_records(processed_records)
         
         print("--- ÉTAPE 4: EXPORT (X) ---")
-        exporter = Exporter(output_dir=f"pep_registry/exports/{self.country_code}")
+        # Utiliser un chemin relatif au répertoire de travail de Render
+        exporter = Exporter(output_dir=f"./exports/{self.country_code}")
         exporter.generate_json_export()
         exporter.generate_csv_export()
         
