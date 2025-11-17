@@ -80,8 +80,9 @@ class PEPRegistryETL:
                 return item
         
         # Ajouter le pipeline temporaire
+        # Nous devons utiliser le nom complet du module pour que Scrapy le trouve
         process.settings.set('ITEM_PIPELINES', {
-            __name__ + '.RawDataPipeline': 300,
+            'src.etl.pep_etl.RawDataPipeline': 300,
         })
         
         # Lancer le crawler
