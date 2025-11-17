@@ -73,20 +73,23 @@ class PEPRegistryETL:
         # Liste pour stocker les résultats du crawler
         raw_data_list = []
         
-        # Définir un pipeline temporaire pour capturer les données
-        class RawDataPipeline:
+        # Créer un collecteur d'items simple
+        class ItemCollector:
+            def __init__(self, items):
+                self.items = items
             def process_item(self, item, spider):
-                raw_data_list.append(dict(item))
+                self.items.append(dict(item))
                 return item
         
-        # Ajouter le pipeline temporaire
-        # Nous devons utiliser le nom du fichier (pep_etl) pour que Scrapy trouve la classe
+        # Ajouter le collecteur d'items comme pipeline
+        # Nous utilisons la classe ItemCollector elle-même, ce qui est possible
+        # car elle est définie dans le même scope que CrawlerProcess.
         process.settings.set('ITEM_PIPELINES', {
-            'pep_etl.RawDataPipeline': 300,
+            __name__ + '.ItemCollector': 300,
         })
         
         # Lancer le crawler
-        process.crawl(Le360Spider)
+        process.crawl(Le360Spider, items=raw_data_list)
         process.start()  # Le processus est bloquant jusqu'à ce que tous les crawlers soient terminés
         
         print(f"Extraction réelle via Scrapy terminée. {len(raw_data_list)} éléments capturés.")
