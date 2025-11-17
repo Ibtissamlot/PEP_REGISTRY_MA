@@ -58,7 +58,7 @@ class PEPRegistryETL:
         # Appel du Scrapy Crawler
         from scrapy.crawler import CrawlerProcess
         from scrapy.utils.project import get_project_settings
-        from src.etl.spiders.hespress_spider import HespressSpider
+        from src.etl.spiders.le360_spider import Le360Spider
         
         # Configuration Scrapy (à adapter si nécessaire)
         settings = get_project_settings()
@@ -85,7 +85,7 @@ class PEPRegistryETL:
         })
         
         # Lancer le crawler
-        process.crawl(HespressSpider)
+        process.crawl(Le360Spider)
         process.start()  # Le processus est bloquant jusqu'à ce que tous les crawlers soient terminés
         
         print(f"Extraction réelle via Scrapy terminée. {len(raw_data_list)} éléments capturés.")
