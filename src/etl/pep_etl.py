@@ -73,20 +73,12 @@ class PEPRegistryETL:
         # Liste pour stocker les résultats du crawler
         raw_data_list = []
         
-        # Créer un collecteur d'items simple
-        class ItemCollector:
-            def __init__(self, settings):
-                # Récupérer la liste passée via les settings
-                self.items = settings.get('RAW_DATA_LIST', [])
-            def process_item(self, item, spider):
-                self.items.append(dict(item))
-                return item
+        from src.etl.pipelines import ItemCollector
         
         # Ajouter le collecteur d'items comme pipeline
-        # Nous utilisons la classe ItemCollector elle-même, ce qui est possible
-        # car elle est définie dans le même scope que CrawlerProcess.
+        # Nous utilisons le chemin de module complet pour que Scrapy le trouve.
         process.settings.set('ITEM_PIPELINES', {
-            __name__ + '.ItemCollector': 300,
+            'src.etl.pipelines.ItemCollector': 300,
         })
         
         # Lancer le crawler
