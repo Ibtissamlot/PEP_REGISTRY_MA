@@ -58,7 +58,7 @@ class PEPRegistryETL:
         # Appel du Scrapy Crawler
         from scrapy.crawler import CrawlerProcess
         from scrapy.utils.project import get_project_settings
-        from src.etl.spiders.leconomiste_spider import LEconomisteSpider
+        from src.etl.spiders.lematin_rss_spider import LeMatinRSSSpider
         
         # Configuration Scrapy (à adapter si nécessaire)
         settings = get_project_settings()
@@ -87,7 +87,7 @@ class PEPRegistryETL:
         settings.set('RAW_DATA_LIST', raw_data_list)
         settings.set('USER_AGENT', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
         settings.set('ROBOTSTXT_OBEY', False)
-        process.crawl(LEconomisteSpider)
+        process.crawl(LeMatinRSSSpider)
         process.start()  # Le processus est bloquant jusqu'à ce que tous les crawlers soient terminés
         
         print(f"Extraction réelle via Scrapy terminée. {len(raw_data_list)} éléments capturés.")
