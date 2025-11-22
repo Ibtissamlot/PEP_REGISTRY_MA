@@ -85,6 +85,8 @@ class PEPRegistryETL:
         # Le CrawlerProcess ne peut pas passer d'arguments au spider de cette manière.
         # Nous allons utiliser les settings pour passer la liste.
         settings.set('RAW_DATA_LIST', raw_data_list)
+        settings.set('USER_AGENT', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+        settings.set('ROBOTSTXT_OBEY', False)
         process.crawl(LEconomisteSpider)
         process.start()  # Le processus est bloquant jusqu'à ce que tous les crawlers soient terminés
         
