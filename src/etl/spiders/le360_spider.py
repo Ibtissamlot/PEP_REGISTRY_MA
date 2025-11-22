@@ -9,14 +9,13 @@ class Le360Spider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        # Sélecteur pour les liens d'articles dans la section principale
+        # Sélecteur pour les liens d'articles sur la page de liste (Politique/Economie)
         # Basé sur l'inspection de la page fr.le360.ma/politique/
-        article_links = response.css('h2 a::attr(href), h3 a::attr(href), .article-list-item a::attr(href)').getall()
+        # Les liens sont dans des balises <a> qui sont les enfants directs de <div> sans classe
+        # ou dans des balises <a> avec un attribut id="card-list--headline-link"
+        article_links = response.css('article a::attr(href), #card-list--headline-link::attr(href)').getall()
         
-        # Sélecteur pour les liens dans la colonne latérale "Fil d'actualité"
-        sidebar_links = response.css('.sidebar-block a::attr(href)').getall()
-        
-        all_links = set(article_links + sidebar_links)
+        all_links = set(article_links)
 
         for link in all_links:
             # Assurez-vous que le lien est complet
@@ -25,6 +24,7 @@ class Le360Spider(scrapy.Spider):
     def parse_article(self, response):
         # Extraction du contenu de l'article
         title = response.css('h1::text').get()
+        # Le contenu est dans des balises <p> à l'intérieur d'un <div> avec la classe "article-content"
         content_paragraphs = response.css('.article-content p::text').getall()
         content = ' '.join(content_paragraphs).strip()
         
