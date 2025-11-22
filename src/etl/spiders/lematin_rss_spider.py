@@ -23,7 +23,7 @@ class LeMatinRSSSpider(scrapy.Spider):
         
         # Sélecteurs génériques pour le contenu de l'article sur lematin.ma
         # Basé sur l'inspection rapide de la structure des articles du Matin
-        content_paragraphs = response.css('.article-body p::text, .article-content p::text').getall()
+        content_paragraphs = response.css('.article-body p::text, .article-content p::text, .entry-content p::text, div[itemprop="articleBody"] p::text').getall()
         content = ' '.join(content_paragraphs).strip()
         
         # Extraction de la date (si disponible)
