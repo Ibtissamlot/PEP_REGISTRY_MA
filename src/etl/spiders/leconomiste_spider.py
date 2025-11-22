@@ -16,11 +16,15 @@ class LEconomisteSpider(scrapy.Spider):
         # Sélecteur pour les liens d'articles sur la page de liste
         # Le sélecteur le plus fiable semble être 'a[href]' dans le corps de la page, 
         # mais nous allons cibler les liens qui ne sont pas des catégories ou des éditoriaux.
-        # Le pattern d'URL des articles est généralement /annee/mois/jour/titre/
-        article_links = response.css('a[href*="/2025/"]::attr(href), a[href*="/2024/"]::attr(href), a[href*="/2023/"]::attr(href)').getall()
+        # Sélecteur agressif pour les liens d'articles: tout lien qui ressemble à un article (contient une date ou un titre long)
+        # Nous allons utiliser un sélecteur plus large pour capturer plus de liens.
+        article_links = response.css('a[href*="/2025/"]::attr(href), a[href*="/2024/"]::attr(href), a[href*="/2023/"]::attr(href), a[href*="-"]::attr(href)').getall()
         
-        # Ajout des liens de la page d'accueil qui ne suivent pas le pattern de date
-        article_links.extend(response.css('a[href*="de-bonnes-sources-"]::attr(href), a[href*="appel-doffres-onicl-"]::attr(href)').getall())
+        # Filtrer les liens qui sont des catégories ou des éditoriaux
+        article_links = [link for link in article_links if not any(keyword in link for keyword in ['/categorie/', '/editorial/', '/rss-leconomiste/'])]
+        
+        # S'assurer que les liens sont uniques
+        article_links = list(set(article_links))
         
         # Le flux RSS semble aussi contenir des liens d'articles
         rss_links = response.css('item link::text').getall()
@@ -36,7 +40,8 @@ class LEconomisteSpider(scrapy.Spider):
         title = response.css('h1::text').get()
         
         # Le contenu est souvent dans des balises <p> à l'intérieur d'un conteneur principal
-        content_paragraphs = response.css('.article-content p::text, .post-content p::text').getall()
+        # Ajout de sélecteurs plus génériques pour le contenu de l'article
+        content_paragraphs = response.css('.article-content p::text, .post-content p::text, .entry-content p::text, div[itemprop="articleBody"] p::text').getall()
         content = ' '.join(content_paragraphs).strip()
         
         # Extraction de la date (si disponible)
