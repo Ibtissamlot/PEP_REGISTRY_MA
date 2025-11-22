@@ -1,12 +1,25 @@
 import scrapy
 
 class LEconomisteRSSSpider(scrapy.Spider):
+    custom_settings = {
+        'DOWNLOAD_DELAY': 5,  # Ajouter un délai de 5 secondes entre les requêtes
+        'HTTPERROR_ALLOWED_CODES': [403], # Permettre de traiter les réponses 403
+    }
     name = 'leconomiste_rss'
     allowed_domains = ['www.leconomiste.com']
     # Utilisation directe du flux RSS pour la découverte des articles
     start_urls = ['https://www.leconomiste.com/rss-leconomiste/4579']
 
+    def start_requests(self):
+        for url in self.start_urls:
+            yield scrapy.Request(url, self.parse, dont_filter=True)
+
     def parse(self, response):
+        # Vérifier si la réponse est un 403
+        if response.status == 403:
+            self.logger.error(f"Requête bloquée par le serveur (403) pour l'URL: {response.url}. Le scraping ne peut pas continuer.")
+            return # Arrêter le scraping si le flux RSS est bloqué
+
         # Le flux RSS est en XML, nous utilisons les sélecteurs XML/XPath
         # Chaque article est dans une balise <item>
         for item in response.xpath('//item'):
