@@ -13,7 +13,14 @@ class LEconomisteSpider(scrapy.Spider):
         # Sélecteur pour les liens d'articles sur la page de liste
         # Basé sur l'inspection de la page d'accueil et des catégories
         # Les liens d'articles sont souvent dans des balises <a> qui contiennent un titre ou une image
-        article_links = response.css('h2 a::attr(href), h3 a::attr(href), .post-title a::attr(href), .article-link::attr(href)').getall()
+        # Sélecteur pour les liens d'articles sur la page de liste
+        # Le sélecteur le plus fiable semble être 'a[href]' dans le corps de la page, 
+        # mais nous allons cibler les liens qui ne sont pas des catégories ou des éditoriaux.
+        # Le pattern d'URL des articles est généralement /annee/mois/jour/titre/
+        article_links = response.css('a[href*="/2025/"]::attr(href), a[href*="/2024/"]::attr(href), a[href*="/2023/"]::attr(href)').getall()
+        
+        # Ajout des liens de la page d'accueil qui ne suivent pas le pattern de date
+        article_links.extend(response.css('a[href*="de-bonnes-sources-"]::attr(href), a[href*="appel-doffres-onicl-"]::attr(href)').getall())
         
         # Le flux RSS semble aussi contenir des liens d'articles
         rss_links = response.css('item link::text').getall()
