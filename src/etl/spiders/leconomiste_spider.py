@@ -4,13 +4,13 @@ class LEconomisteSpider(scrapy.Spider):
     name = 'leconomiste'
     allowed_domains = ['www.leconomiste.com']
     login_url = 'https://www.leconomiste.com/connexion'
-    start_urls = [
+    start_urls_list = [
         'https://www.leconomiste.com/',
         'https://www.leconomiste.com/categorie/economie',
         'https://www.leconomiste.com/categorie/politique'
     ]
 
-    def start_requests(self):
+    def start_requests(self ):
         # Récupérer les identifiants depuis les settings (variables d'environnement)
         username = self.settings.get('LECONOMISTE_USERNAME')
         password = self.settings.get('LECONOMISTE_PASSWORD')
@@ -25,7 +25,7 @@ class LEconomisteSpider(scrapy.Spider):
         else:
             self.logger.warning("Identifiants LECONOMISTE_USERNAME ou LECONOMISTE_PASSWORD non trouvés. Démarrage du scraping sans authentification.")
             # Si pas d'identifiants, continuer sans authentification (pour les articles gratuits)
-            for url in self.start_urls:
+            for url in self.start_urls_list:
                 yield scrapy.Request(url, self.parse)
 
     def parse_login_page(self, response):
@@ -57,19 +57,13 @@ class LEconomisteSpider(scrapy.Spider):
             self.logger.error("Échec de la connexion à L'Economiste. Le scraping continuera avec les articles gratuits.")
 
         # Démarrer le scraping des URLs
-        for url in self.start_urls:
+        for url in self.start_urls_list:
             yield scrapy.Request(url, self.parse)
 
     def parse(self, response):
         # Sélecteur pour les liens d'articles sur la page de liste
-        # Basé sur l'inspection de la page d'accueil et des catégories
-        # Les liens d'articles sont souvent dans des balises <a> qui contiennent un titre ou une image
-        # Sélecteur pour les liens d'articles sur la page de liste
-        # Le sélecteur le plus fiable semble être 'a[href]' dans le corps de la page, 
-        # mais nous allons cibler les liens qui ne sont pas des catégories ou des éditoriaux.
-        # Sélecteur agressif pour les liens d'articles: tout lien qui ressemble à un article (contient une date ou un titre long)
-        # Nous allons utiliser un sélecteur plus large pour capturer plus de liens.
-        article_links = response.css('a[href*="/2025/"]::attr(href), a[href*="/2024/"]::attr(href), a[href*="/2023/"]::attr(href), a[href*="-"]::attr(href)').getall()
+        # Cibler les liens dans des conteneurs d'articles
+        article_links = response.css('div.article-item a::attr(href), div.post-item a::attr(href), a.article-link::attr(href)').getall()
         
         # Filtrer les liens qui sont des catégories ou des éditoriaux
         article_links = [link for link in article_links if not any(keyword in link for keyword in ['/categorie/', '/editorial/', '/rss-leconomiste/'])]
@@ -91,8 +85,8 @@ class LEconomisteSpider(scrapy.Spider):
         title = response.css('h1::text').get()
         
         # Le contenu est souvent dans des balises <p> à l'intérieur d'un conteneur principal
-        # Ajout de sélecteurs plus génériques pour le contenu de l'article
-        content_paragraphs = response.css('.article-content p::text, .post-content p::text, .entry-content p::text, div[itemprop="articleBody"] p::text').getall()
+        # Sélecteurs plus génériques pour le contenu de l'article
+        content_paragraphs = response.css('div.article-body p::text, div.post-content p::text, div[itemprop="articleBody"] p::text').getall()
         content = ' '.join(content_paragraphs).strip()
         
         # Extraction de la date (si disponible)
