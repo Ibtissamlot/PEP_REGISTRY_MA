@@ -97,7 +97,7 @@ def run_etl_pipeline():
         # Insertion dans Supabase
         try:
             # Insérer les données dans la table 'pep_master'
-            supabase_client.table('pep_master').insert(supabase_data).execute()
+            supabase_client.table('pep_version').insert(supabase_data).execute()
             print(f"Chargement (L) terminé. {len(supabase_data)} enregistrements chargés avec succès dans 'pep_master'.")
         except Exception as e:
             print(f"Erreur lors de l'insertion dans Supabase: {e}")
