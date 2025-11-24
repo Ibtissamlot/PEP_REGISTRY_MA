@@ -16,7 +16,7 @@ class LEconomisteSpider(scrapy.Spider):
         password = self.settings.get('LECONOMISTE_PASSWORD')
 
         if username and password:
-            self.logger.info("Identifiants trouvés. Démarrage de la séquence d'authentification.")
+            self.logger.info(f"Identifiants trouvés. Démarrage de la séquence d'authentification pour l'utilisateur: {username[:3]}***.")
             # 1. Requête pour la page de connexion pour obtenir le jeton CSRF (si nécessaire)
             yield scrapy.Request(
                 url=self.login_url,
