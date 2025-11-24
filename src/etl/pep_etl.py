@@ -1,6 +1,10 @@
+import sys
 import os
 import json
 import csv
+# Ajouter le répertoire parent de 'etl' au chemin Python
+# Cela permet de résoudre l'erreur ModuleNotFoundError: No module named 'etl'
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from datetime import datetime
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
