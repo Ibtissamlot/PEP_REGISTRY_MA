@@ -1,3 +1,4 @@
+export PYTHONPATH=$PYTHONPATH:/app/src
 #!/bin/bash
 
 # Se déplacer dans le répertoire de travail
