@@ -1,103 +1,140 @@
-import uuid
+import os
 import json
-from datetime import datetime, timezone
-from src.config import Config
-from src.db_connector import DBConnector
-from src.etl.exporter import Exporter
-from src.etl.loader import Loader
-from src.etl.transformer import Transformer
+import csv
+from datetime import datetime
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+from supabase import create_client, Client
+from dotenv import load_dotenv
 
-class PEPRegistryETL:
+# Charger les variables d'environnement
+load_dotenv()
+
+# Configuration Supabase
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+# Initialisation du client Supabase
+supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Liste pour collecter les données brutes
+RAW_DATA_LIST = []
+
+def transform_to_supabase_format(raw_data_list):
     """
-    Classe principale pour gérer le pipeline ETL du registre PPE.
-    Assure la modularité en chargeant la configuration spécifique au pays.
+    Transforme la liste des données brutes (items Scrapy) en un format
+    compatible avec la table 'source_document' de Supabase.
     """
+    supabase_data = []
+    for item in raw_data_list:
+        # Vérifier si l'item est un article de L'Economiste
+        if item.get('source') == "L'Economiste":
+            # Transformation spécifique pour L'Economiste
+            # Les champs du scraper sont: 'url', 'title', 'content', 'source', 'date_published', 'date_scraped'
+            # Les champs de la table source_document sont: 'url', 'title', 'snippet', 'source', 'date_published', 'date_scraped'
+            
+            # Utiliser le début du contenu comme 'snippet'
+            snippet = item.get('content', '')[:250] + '...' if len(item.get('content', '')) > 250 else item.get('content', '')
+            
+            # Créer l'objet de données pour Supabase
+            data_entry = {
+                'url': item.get('url'),
+                'title': item.get('title'),
+                'snippet': snippet,
+                'source': item.get('source'),
+                'date_published': item.get('date_published'),
+                'date_scraped': item.get('date_scraped', datetime.now().isoformat()),
+                # Ajouter d'autres champs si nécessaire pour la table source_document
+            }
+            supabase_data.append(data_entry)
+        
+        # Ajoutez ici la logique de transformation pour d'autres sources si nécessaire
+        # elif item.get('source') == 'AutreSource':
+        #     ...
+            
+    return supabase_data
+
+def run_etl_pipeline():
+    print("Initialisation du pipeline ETL pour le pays : Maroc")
     
-    def __init__(self, country_code: str = "MA"):
-        self.config = Config(country_code)
-        self.country_code = self.config.country_code
-        print(f"Initialisation du pipeline ETL pour le pays: {self.config.get('country_name')}")
-
-    def run_pipeline(self):
-        """Orchestre les étapes E, T et L du pipeline."""
-        print("--- ÉTAPE 1: EXTRACTION (E) ---")
-        raw_data = self._extract_data()
+    # ÉTAPE 1 : EXTRACTION (E)
+    print("\n--- ÉTAPE 1 : EXTRACTION (E) ---")
+    
+    # Récupérer les settings Scrapy
+    settings = get_project_settings()
+    
+    # Injecter la liste de données brutes dans les settings pour le pipeline ItemCollector
+    settings.set('RAW_DATA_LIST', RAW_DATA_LIST)
+    
+    # Initialiser le crawler process
+    process = CrawlerProcess(settings)
+    
+    # Importer et ajouter les spiders
+    from etl.spiders.leconomiste_spider import LEconomisteSpider
+    # from etl.spiders.lematin_spider import LeMatinSpider # Exemple d'autre spider
+    
+    # Ajouter les spiders au processus
+    process.crawl(LEconomisteSpider)
+    # process.crawl(LeMatinSpider) # Ajouter d'autres spiders ici
+    
+    # Démarrer le crawling (bloquant)
+    process.start()
+    
+    print(f"Extraction réelle via Scrapy terminée. {len(RAW_DATA_LIST)} éléments capturés.")
+    
+    # ÉTAPE 2 : TRANSFORMATION (T)
+    print("\n--- ÉTAPE 2 : TRANSFORMATION (T) ---")
+    
+    # Transformer les données brutes en format Supabase
+    supabase_data = transform_to_supabase_format(RAW_DATA_LIST)
+    
+    print(f"Transformation terminée. {len(supabase_data)} enregistrements prêts pour Supabase.")
+    
+    # ÉTAPE 3 : CHARGEMENT (L)
+    print("\n--- ÉTAPE 3 : CHARGEMENT (L) ---")
+    
+    if supabase_data:
+        print(f"{len(supabase_data)} enregistrements à charger.")
         
-        print("--- ÉTAPE 2: TRANSFORMATION (T) ---")
-        self.transformer = Transformer(self.config.data)
-        processed_records = self.transformer.process_raw_data(raw_data)
+        # Insertion dans Supabase
+        try:
+            # Insérer les données dans la table 'source_document'
+            # Note: La fonction insert de Supabase Python SDK est utilisée ici.
+            # Elle nécessite une liste de dictionnaires.
+            supabase_client.table('source_document').insert(supabase_data).execute()
+            print(f"Chargement (L) terminé. {len(supabase_data)} enregistrements chargés avec succès dans 'source_document'.")
+        except Exception as e:
+            print(f"Erreur lors de l'insertion dans Supabase: {e}")
+            
+        # ÉTAPE 4 : EXPORT (X) - Facultatif, pour la vérification locale
+        print("\n--- ÉTAPE 4 : EXPORT (X) ---")
         
-        print("--- ÉTAPE 3: CHARGEMENT (L) ---")
-        self.loader = Loader(self.country_code)
-        self.loader.load_records(processed_records)
+        # Générer un nom de fichier unique
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        json_filename = f"exports/MA/pep_registry_snapshot_{timestamp}.json"
+        csv_filename = f"exports/MA/pep_registry_snapshot_{timestamp}.csv"
         
-        print("--- ÉTAPE 4: EXPORT (X) ---")
-        # Utiliser un chemin relatif au répertoire de travail de Render
-        exporter = Exporter(output_dir=f"./exports/{self.country_code}")
-        exporter.generate_json_export()
-        exporter.generate_csv_export()
+        # Assurez-vous que le répertoire d'exportation existe
+        os.makedirs(os.path.dirname(json_filename), exist_ok=True)
         
-        print(f"Pipeline ETL pour {self.country_code} terminé.")
-
-    def _extract_data(self):
-        """
-        Implémentation de l'extraction.
-        Pour la simulation, nous allons simplement retourner une liste de sources.
-        En production, cette méthode appellerait les crawlers Scrapy.
-        """
-        raw_sources = []
+        # Export JSON
+        with open(json_filename, 'w', encoding='utf-8') as f:
+            json.dump(supabase_data, f, ensure_ascii=False, indent=4)
+        print(f"Export JSON généré: {json_filename}")
         
-        # --- LOGIQUE D'EXTRACTION RÉELLE ---
-        # En production, cette méthode appellerait les crawlers Scrapy.
-        # Pour l'instant, nous allons simuler le résultat d'un crawler Scrapy
-        # en utilisant des données plus réalistes basées sur les sources.
+        # Export CSV
+        if supabase_data:
+            keys = supabase_data[0].keys()
+            with open(csv_filename, 'w', newline='', encoding='utf-8') as f:
+                dict_writer = csv.DictWriter(f, fieldnames=keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(supabase_data)
+            print(f"Export CSV généré: {csv_filename}")
         
-        # NOTE: Pour une implémentation réelle, vous devriez créer un projet Scrapy
-        # et appeler les crawlers ici.
+    else:
+        print("Aucun enregistrement à charger.")
         
-        # Appel du Scrapy Crawler
-        from scrapy.crawler import CrawlerProcess
-        from scrapy.utils.project import get_project_settings
-        from src.etl.spiders.lematin_rss_spider import LeMatinRSSSpider
-        
-        # Configuration Scrapy (à adapter si nécessaire)
-        settings = get_project_settings()
-        settings.set('LOG_LEVEL', 'INFO')
-        # Désactiver la configuration par défaut du pipeline qui cause une erreur
-        # settings.set('ITEM_PIPELINES', {
-        #     'src.etl.pipelines.RawDataPipeline': 300,
-        # })
-        
-        process = CrawlerProcess(settings)
-        
-        # Liste pour stocker les résultats du crawler
-        raw_data_list = []
-        
-        from src.etl.pipelines import ItemCollector
-        
-        # Ajouter le collecteur d'items comme pipeline
-        # Nous utilisons le chemin de module complet pour que Scrapy le trouve.
-        process.settings.set('ITEM_PIPELINES', {
-            'src.etl.pipelines.ItemCollector': 300,
-        })
-        
-        # Lancer le crawler
-        # Le CrawlerProcess ne peut pas passer d'arguments au spider de cette manière.
-        # Nous allons utiliser les settings pour passer la liste.
-        settings.set('RAW_DATA_LIST', raw_data_list)
-        settings.set('USER_AGENT', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
-        settings.set('ROBOTSTXT_OBEY', False)
-        process.crawl(LeMatinRSSSpider)
-        process.start()  # Le processus est bloquant jusqu'à ce que tous les crawlers soient terminés
-        
-        print(f"Extraction réelle via Scrapy terminée. {len(raw_data_list)} éléments capturés.")
-        return raw_data_list
-        
-
-
-
+    print("\nPipeline ETL pour MA terminé.")
 
 if __name__ == '__main__':
-    # Exemple d'exécution du pipeline pour le Maroc
-    etl = PEPRegistryETL(country_code="MA")
-    etl.run_pipeline()
+    run_etl_pipeline()
