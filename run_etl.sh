@@ -1,8 +1,4 @@
-import sys
-import os
-# Ajouter le répertoire parent de 'etl' au chemin Python
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+export PYTHONPATH=$PYTHONPATH:/app/src
 #!/bin/bash
 
 # Se déplacer dans le répertoire de travail
