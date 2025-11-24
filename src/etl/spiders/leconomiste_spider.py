@@ -1,32 +1,40 @@
 import scrapy
 
 class LEconomisteSpider(scrapy.Spider):
-    # Les identifiants seront passés via les variables d'environnement de Render
-    # et récupérés via les settings Scrapy
-    
-    # URL de la page de connexion
+    name = 'leconomiste'
+    allowed_domains = ['www.leconomiste.com']
     login_url = 'https://www.leconomiste.com/connexion'
-    
+    start_urls = [
+        'https://www.leconomiste.com/',
+        'https://www.leconomiste.com/categorie/economie',
+        'https://www.leconomiste.com/categorie/politique'
+    ]
+
     def start_requests(self):
-        # 1. Requête pour la page de connexion pour obtenir le jeton CSRF (si nécessaire)
-        yield scrapy.Request(
-            url=self.login_url,
-            callback=self.parse_login_page
-        )
+        # Récupérer les identifiants depuis les settings (variables d'environnement)
+        username = self.settings.get('LECONOMISTE_USERNAME')
+        password = self.settings.get('LECONOMISTE_PASSWORD')
+
+        if username and password:
+            self.logger.info("Identifiants trouvés. Démarrage de la séquence d'authentification.")
+            # 1. Requête pour la page de connexion pour obtenir le jeton CSRF (si nécessaire)
+            yield scrapy.Request(
+                url=self.login_url,
+                callback=self.parse_login_page
+            )
+        else:
+            self.logger.warning("Identifiants LECONOMISTE_USERNAME ou LECONOMISTE_PASSWORD non trouvés. Démarrage du scraping sans authentification.")
+            # Si pas d'identifiants, continuer sans authentification (pour les articles gratuits)
+            for url in self.start_urls:
+                yield scrapy.Request(url, self.parse)
 
     def parse_login_page(self, response):
         # Tenter de trouver le jeton CSRF (souvent un champ caché)
-        # Si le site utilise un jeton, il est souvent dans un champ caché
         csrf_token = response.css('input[name="_token"]::attr(value)').get()
         
         # Récupérer les identifiants depuis les settings (variables d'environnement)
         username = self.settings.get('LECONOMISTE_USERNAME')
         password = self.settings.get('LECONOMISTE_PASSWORD')
-
-        if not username or not password:
-            self.logger.error("Identifiants LECONOMISTE_USERNAME ou LECONOMISTE_PASSWORD non trouvés dans les settings.")
-            # Si pas d'identifiants, continuer sans authentification (pour les articles gratuits)
-            return self.start_requests_without_auth()
 
         # 2. Requête POST pour l'authentification
         return scrapy.FormRequest.from_response(
@@ -43,32 +51,14 @@ class LEconomisteSpider(scrapy.Spider):
 
     def after_login(self, response):
         # Vérifier si la connexion a réussi
-        # Si la connexion a réussi, l'URL devrait avoir changé ou la page devrait afficher le nom de l'utilisateur
         if "Mon Compte" in response.text or "Déconnexion" in response.text:
             self.logger.info("Connexion à L'Economiste réussie. Démarrage du scraping.")
-            # Si la connexion réussit, démarrer le scraping des URLs
-            return self.start_requests_without_auth()
         else:
-            self.logger.error("Échec de la connexion à L'Economiste. Tentative de scraping sans authentification.")
-            # Si la connexion échoue, continuer sans authentification
-            return self.start_requests_without_auth()
+            self.logger.error("Échec de la connexion à L'Economiste. Le scraping continuera avec les articles gratuits.")
 
-    def start_requests_without_auth(self):
-        # Logique de scraping des pages de liste (Politique, Économie, etc.)
-        # Utilise les start_urls définis précédemment
+        # Démarrer le scraping des URLs
         for url in self.start_urls:
             yield scrapy.Request(url, self.parse)
-
-    # Reste du code du spider (parse et parse_article)
-    # ...
-    class LEconomisteSpider(scrapy.Spider):
-    name = 'leconomiste'
-    allowed_domains = ['www.leconomiste.com']
-    start_urls = [
-        'https://www.leconomiste.com/',
-        'https://www.leconomiste.com/categorie/economie',
-        'https://www.leconomiste.com/categorie/politique'
-    ]
 
     def parse(self, response):
         # Sélecteur pour les liens d'articles sur la page de liste
