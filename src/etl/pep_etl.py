@@ -20,31 +20,27 @@ supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # Liste pour collecter les données brutes
 RAW_DATA_LIST = []
 
-def transform_to_supabase_format(raw_data_list):
+def transform_to_pep_master_format(raw_data_list):
     """
     Transforme la liste des données brutes (items Scrapy) en un format
-    compatible avec la table 'source_document' de Supabase.
+    compatible avec la table 'pep_master' (ou la table de données principales).
     """
     supabase_data = []
     for item in raw_data_list:
         # Vérifier si l'item est un article de L'Economiste
         if item.get('source') == "L'Economiste":
-            # Transformation spécifique pour L'Economiste
-            # Les champs du scraper sont: 'url', 'title', 'content', 'source', 'date_published', 'date_scraped'
-            # Les champs de la table source_document sont: 'url', 'title', 'snippet', 'source', 'date_published', 'date_scraped'
-            
-            # Utiliser le début du contenu comme 'snippet'
-            snippet = item.get('content', '')[:250] + '...' if len(item.get('content', '')) > 250 else item.get('content', '')
+            # Transformation pour la table pep_master
+            # Nous insérons les données brutes de l'article.
             
             # Créer l'objet de données pour Supabase
             data_entry = {
                 'url': item.get('url'),
                 'title': item.get('title'),
-                'snippet': snippet,
+                'content': item.get('content'), # Ajout du contenu complet
                 'source': item.get('source'),
                 'date_published': item.get('date_published'),
                 'date_scraped': item.get('date_scraped', datetime.now().isoformat()),
-                # Ajouter d'autres champs si nécessaire pour la table source_document
+                # Ajoutez ici les autres champs requis par votre table pep_master
             }
             supabase_data.append(data_entry)
         
@@ -71,11 +67,9 @@ def run_etl_pipeline():
     
     # Importer et ajouter les spiders
     from etl.spiders.leconomiste_spider import LEconomisteSpider
-    # from etl.spiders.lematin_spider import LeMatinSpider # Exemple d'autre spider
     
     # Ajouter les spiders au processus
     process.crawl(LEconomisteSpider)
-    # process.crawl(LeMatinSpider) # Ajouter d'autres spiders ici
     
     # Démarrer le crawling (bloquant)
     process.start()
@@ -85,8 +79,8 @@ def run_etl_pipeline():
     # ÉTAPE 2 : TRANSFORMATION (T)
     print("\n--- ÉTAPE 2 : TRANSFORMATION (T) ---")
     
-    # Transformer les données brutes en format Supabase
-    supabase_data = transform_to_supabase_format(RAW_DATA_LIST)
+    # Transformer les données brutes en format Supabase pour la table pep_master
+    supabase_data = transform_to_pep_master_format(RAW_DATA_LIST)
     
     print(f"Transformation terminée. {len(supabase_data)} enregistrements prêts pour Supabase.")
     
@@ -98,11 +92,9 @@ def run_etl_pipeline():
         
         # Insertion dans Supabase
         try:
-            # Insérer les données dans la table 'source_document'
-            # Note: La fonction insert de Supabase Python SDK est utilisée ici.
-            # Elle nécessite une liste de dictionnaires.
-            supabase_client.table('source_document').insert(supabase_data).execute()
-            print(f"Chargement (L) terminé. {len(supabase_data)} enregistrements chargés avec succès dans 'source_document'.")
+            # Insérer les données dans la table 'pep_master'
+            supabase_client.table('pep_master').insert(supabase_data).execute()
+            print(f"Chargement (L) terminé. {len(supabase_data)} enregistrements chargés avec succès dans 'pep_master'.")
         except Exception as e:
             print(f"Erreur lors de l'insertion dans Supabase: {e}")
             
@@ -138,3 +130,4 @@ def run_etl_pipeline():
 
 if __name__ == '__main__':
     run_etl_pipeline()
+
