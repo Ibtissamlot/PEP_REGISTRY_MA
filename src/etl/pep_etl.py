@@ -27,31 +27,33 @@ RAW_DATA_LIST = []
 def transform_to_pep_master_format(raw_data_list):
     """
     Transforme la liste des données brutes (items Scrapy) en un format
-    compatible avec la table 'pep_master' (ou la table de données principales).
+    compatible avec la table 'pep_version' (en mappant les données dans data_jsonb).
     """
     supabase_data = []
     for item in raw_data_list:
         # Vérifier si l'item est un article de L'Economiste
         if item.get('source') == "L'Economiste":
-            # Transformation pour la table pep_master
-            # Nous insérons les données brutes de l'article.
             
-            # Créer l'objet de données pour Supabase
-            data_entry = {
+            # Créer l'objet JSON qui sera inséré dans la colonne data_jsonb
+            data_jsonb_content = {
                 'url': item.get('url'),
                 'title': item.get('title'),
-                'content': item.get('content'), # Ajout du contenu complet
+                'content': item.get('content'),
                 'source': item.get('source'),
                 'date_published': item.get('date_published'),
                 'date_scraped': item.get('date_scraped', datetime.now().isoformat()),
-                # Ajoutez ici les autres champs requis par votre table pep_master
+            }
+            
+            # Créer l'objet de données pour Supabase (pour la table pep_version)
+            data_entry = {
+                # pep_id est une clé étrangère, nous ne la fournissons pas ici
+                'data_jsonb': data_jsonb_content,
+                'confidence_score': 1.0, # Score de confiance élevé pour les données brutes
+                'status': 'under_review', # Statut par défaut
+                # first_seen et last_updated sont gérés par la base de données
             }
             supabase_data.append(data_entry)
         
-        # Ajoutez ici la logique de transformation pour d'autres sources si nécessaire
-        # elif item.get('source') == 'AutreSource':
-        #     ...
-            
     return supabase_data
 
 def run_etl_pipeline():
